@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmbryoGuard Pro — Incubator Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260518a">
+</head>
+<body>
+
+<!-- ── HEADER ────────────────────────────── -->
+<header id="main-header">
+  <div class="header-left">
+    <div class="logo">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="url(#hg)" stroke-width="2.5" fill="none"/>
+        <ellipse cx="16" cy="16" rx="7" ry="10" fill="url(#hg)" opacity="0.25"/>
+        <circle cx="16" cy="14" r="3" fill="#00d4ff"/>
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="32" y2="32">
+          <stop stop-color="#00d4ff"/><stop offset="1" stop-color="#7b61ff"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div>
+      <h1>EmbryoGuard <span class="accent">Pro</span></h1>
+      <p class="subtitle">Incubator Monitoring System</p>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="incubation-tracker">
+      <span class="day-label">INCUBATION</span>
+      <span class="day-value" id="inc-day">Day 1 / 21</span>
+      <div class="progress-bar"><div class="progress-fill" id="inc-progress" style="width:5%"></div></div>
+      <span class="phase-label" id="inc-phase">INCUBATION PHASE</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="system-status" id="sys-status">
+      <span class="status-dot ok"></span>
+      <span class="status-text">All Systems Normal</span>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<main>
+  <!-- ── NODE 1 ─────────────────────────── -->
+  <section class="node-card" id="node1-card">
+    <div class="card-header">
+      <div class="node-badge n1">N1</div>
+      <h2>Environment Controller</h2>
+      <div class="node-status" id="n1-status">
+        <span class="status-dot offline"></span><span>Offline</span>
+      </div>
+    </div>
+
+    <div class="gauges-row">
+      <div class="gauge-container">
+        <svg viewBox="0 0 120 120" class="gauge-svg">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+          <circle id="n1-temp-arc" class="gauge-arc" cx="60" cy="60" r="50" fill="none" stroke="var(--cyan)" stroke-width="10" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" transform="rotate(-90 60 60)"/>
+          <text x="60" y="54" text-anchor="middle" class="gauge-value" id="n1-temp-val">--</text>
+          <text x="60" y="70" text-anchor="middle" class="gauge-unit">°C</text>
+          <text x="60" y="100" text-anchor="middle" class="gauge-label">TEMPERATURE</text>
+        </svg>
+        <div class="gauge-badge" id="n1-temp-badge">N/A</div>
+      </div>
+      
+      <div class="gauge-container">
+        <svg viewBox="0 0 120 120" class="gauge-svg">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+          <circle id="n1-hum-arc" class="gauge-arc" cx="60" cy="60" r="50" fill="none" stroke="var(--purple)" stroke-width="10" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" transform="rotate(-90 60 60)"/>
+          <text x="60" y="54" text-anchor="middle" class="gauge-value" id="n1-hum-val">--</text>
+          <text x="60" y="70" text-anchor="middle" class="gauge-unit">%</text>
+          <text x="60" y="100" text-anchor="middle" class="gauge-label">HUMIDITY</text>
+        </svg>
+        <div class="gauge-badge" id="n1-hum-badge">N/A</div>
+      </div>
+    </div>
+
+    <!-- ── EGG TYPE SELECTOR ──────────────── -->
+    <div class="egg-selector-section">
+      <h3>🥚 EGG TYPE — SELECT FOR INCUBATION</h3>
+      <div class="egg-type-row">
+        <button class="egg-btn active" id="egg-chicken" onclick="selectEgg('chicken')">
+          <span class="egg-emoji">🐔</span>
+          <span>CHICKEN</span>
+          <span class="egg-temp-hint">37.5°C</span>
+        </button>
+        <button class="egg-btn" id="egg-duck" onclick="selectEgg('duck')">
+          <span class="egg-emoji">🦆</span>
+          <span>DUCK</span>
+          <span class="egg-temp-hint">37.7°C</span>
+        </button>
+        <button class="egg-btn" id="egg-quail" onclick="selectEgg('quail')">
+          <span class="egg-emoji">🐦</span>
+          <span>QUAIL</span>
+          <span class="egg-temp-hint">37.8°C</span>
+        </button>
+        <button class="egg-btn" id="egg-goose" onclick="selectEgg('goose')">
+          <span class="egg-emoji">🦢</span>
+          <span>GOOSE</span>
+          <span class="egg-temp-hint">37.6°C</span>
+        </button>
+      </div>
+      <div class="egg-target-temp">
+        Target: <span id="egg-target-display">37.5°C</span>
+      </div>
+    </div>
+
+    <!-- ── ACTUATOR CONTROLS ──────────────── -->
+    <div class="controls-section">
+      <h3>ACTUATOR CONTROLS</h3>
+
+      <div class="control-row">
+        <label>MODE</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="mode-auto-btn" onclick="setMode('AUTO')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;">
+              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+            </svg>AUTO
+          </button>
+          <button class="toggle-btn" id="mode-manual-btn" onclick="setMode('MANUAL')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"/>
+            </svg>MANUAL
+          </button>
+        </div>
+        <span class="control-status" id="mode-status">AUTO</span>
+      </div>
+
+      <div class="control-row manual-control" id="fan-row">
+        <label>FAN</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="fan-off-btn" onclick="sendControl(1,'fan',false)">OFF</button>
+          <button class="toggle-btn" id="fan-on-btn" onclick="sendControl(1,'fan',true)">ON</button>
+        </div>
+        <span class="control-status" id="fan-status">OFF</span>
+      </div>
+
+      <div class="control-row manual-control" id="lamp-row">
+        <label>LAMP</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="lamp-off-btn" onclick="sendControl(1,'lamp','OFF')">OFF</button>
+          <button class="toggle-btn" id="lamp-on-btn" onclick="sendControl(1,'lamp','FULL')">ON</button>
+        </div>
+        <span class="control-status" id="lamp-status">OFF</span>
+      </div>
+
+      <div class="control-row manual-control" id="servo-row">
+        <label>EGGS</label>
+        <button class="action-btn" id="servo-btn" onclick="sendControl(1,'servo','turn')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+          </svg>
+          Turn Eggs
+        </button>
+        <span class="control-status" id="servo-status">0°</span>
+      </div>
+
+      <!-- Lock notice shown when AUTO is active -->
+      <div class="auto-lock-notice" id="auto-lock-notice">
+        🔒 AUTO mode active — Fan, Lamp & Egg Turner are controlled automatically
+      </div>
+    </div>
+  </section>
+
+  <!-- ── NODE 2 ─────────────────────────── -->
+  <aside style="display:flex; flex-direction:column; gap:20px;">
+    <section class="node-card" id="node2-card">
+      <div class="card-header">
+        <div class="node-badge n2">N2</div>
+        <h2>Atmosphere Monitor</h2>
+        <div class="node-status" id="n2-status">
+          <span class="status-dot offline"></span><span>Offline</span>
+        </div>
+      </div>
+
+      <div class="sensor-cards">
+        <div class="sensor-card" id="n2-temp-card">
+          <div class="sensor-icon temp-icon">T</div>
+          <div class="sensor-info">
+            <span class="sensor-label">TEMPERATURE</span>
+            <span class="sensor-value" id="n2-temp-val">-- °C</span>
+          </div>
+          <div class="sensor-badge" id="n2-temp-badge">N/A</div>
+        </div>
+        
+        <div class="sensor-card" id="n2-hum-card">
+          <div class="sensor-icon hum-icon">H</div>
+          <div class="sensor-info">
+            <span class="sensor-label">HUMIDITY</span>
+            <span class="sensor-value" id="n2-hum-val">-- %</span>
+          </div>
+          <div class="sensor-badge" id="n2-hum-badge">N/A</div>
+        </div>
+
+        <div class="sensor-card" id="n2-mq-card">
+          <div class="sensor-icon mq-icon">A</div>
+          <div class="sensor-info">
+            <span class="sensor-label">AMMONIA / AIR</span>
+            <span class="sensor-value" id="n2-mq-val">ADC: 0</span>
+            <div class="bar-track"><div class="bar-fill" id="n2-mq-bar"></div></div>
+          </div>
+          <div class="sensor-badge" id="n2-mq-badge">N/A</div>
+        </div>
+
+        <div class="sensor-card" id="n2-light-card">
+          <div class="sensor-icon light-icon">L</div>
+          <div class="sensor-info">
+            <span class="sensor-label">LIGHT LEVEL</span>
+            <span class="sensor-value" id="n2-light-val">0 %</span>
+            <div class="bar-track"><div class="bar-fill" id="n2-light-bar"></div></div>
+          </div>
+          <div class="sensor-badge" id="n2-light-badge">N/A</div>
+        </div>
+      </div>
+
+      <div class="node2-footer">
+        <span id="n2-wifi">WiFi: --</span>
+        <span id="n2-cycle">Cycle: 0</span>
+      </div>
+    </section>
+
+    <!-- QR CODE -->
+    <section class="qr-container">
+      <div style="font-weight:900; font-size:1.1rem; color:#2E1503; margin-bottom:15px;">🐣 Connect Mobile</div>
+      <div id="qr-code-container"></div>
+      <p>Scan to monitor on your phone!</p>
+      <div id="server-ip" style="font-size:0.85rem; margin-top:8px;">http://--</div>
+    </section>
+  </aside>
+
+  <!-- CHARTS -->
+  <section class="charts-section">
+    <div class="chart-card">
+      <h3>Temperature History</h3>
+      <div class="chart-wrapper"><canvas id="temp-chart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Humidity History</h3>
+      <div class="chart-wrapper"><canvas id="hum-chart"></canvas></div>
+    </div>
+  </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}?v=20260518a"></script>
+</body>
+</html>
